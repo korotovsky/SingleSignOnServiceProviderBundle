@@ -1,11 +1,11 @@
 <?php
 
-namespace FM\SingleSignOnBundle\Authentication\Provider;
+namespace Krtv\Bundle\SingleSignOnServiceProviderBundle\Authentication\Provider;
 
-use FM\SingleSignOnBundle\Entity\OneTimePassword;
-use FM\SingleSignOnBundle\Authentication\Token\OneTimePasswordToken;
-use FM\SingleSignOnBundle\Manager\OneTimePasswordManager;
-use FM\SingleSignOnBundle\Encoder\OneTimePasswordEncoder;
+use Krtv\SingleSignOn\Model\OneTimePassword;
+use Krtv\SingleSignOn\Encoder\OneTimePasswordEncoder;
+use Krtv\SingleSignOn\Manager\OneTimePasswordManagerInterface;
+use Krtv\Bundle\SingleSignOnServiceProviderBundle\Authentication\Token\OneTimePasswordToken;
 
 use Symfony\Component\HttpKernel\Log\LoggerInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -16,16 +16,45 @@ use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authentication\Token\PreAuthenticatedToken;
 use Symfony\Component\Security\Core\Authentication\Provider\AuthenticationProviderInterface;
 
+/**
+ * Class OneTimePasswordAuthenticationProvider
+ * @package Krtv\Bundle\SingleSignOnServiceProviderBundle\Authentication\Provider
+ */
 class OneTimePasswordAuthenticationProvider implements AuthenticationProviderInterface
 {
+    /**
+     * @var string
+     */
     private $providerKey;
+
+    /**
+     * @var OneTimePasswordEncoder
+     */
     private $encoder;
+
+    /**
+     * @var UserProviderInterface
+     */
     private $userProvider;
+
+    /**
+     * @var OneTimePasswordManagerInterface
+     */
     private $otpManager;
 
+    /**
+     * @var LoggerInterface
+     */
     private $logger;
 
-    public function __construct(UserProviderInterface $userProvider, OneTimePasswordManager $otpManager, $providerKey, OneTimePasswordEncoder $encoder, LoggerInterface $logger = null)
+    /**
+     * @param UserProviderInterface $userProvider
+     * @param OneTimePasswordManagerInterface $otpManager
+     * @param string $providerKey
+     * @param OneTimePasswordEncoder $encoder
+     * @param LoggerInterface $logger
+     */
+    public function __construct(UserProviderInterface $userProvider, OneTimePasswordManagerInterface $otpManager, $providerKey, OneTimePasswordEncoder $encoder, LoggerInterface $logger = null)
     {
         $this->providerKey = $providerKey;
         $this->userProvider = $userProvider;
@@ -34,11 +63,18 @@ class OneTimePasswordAuthenticationProvider implements AuthenticationProviderInt
         $this->encoder = $encoder;
     }
 
+    /**
+     * @return UserProviderInterface
+     */
     public function getUserProvider()
     {
         return $this->userProvider;
     }
 
+    /**
+     * @param TokenInterface $token
+     * @return TokenInterface|void
+     */
     public function authenticate(TokenInterface $token)
     {
         try {
@@ -80,15 +116,19 @@ class OneTimePasswordAuthenticationProvider implements AuthenticationProviderInt
         throw new AuthenticationException('OneTimePassword authentication failed.');
     }
 
+    /**
+     * @param OneTimePassword $otp
+     * @return UserInterface
+     */
     public function authenticateOneTimePassword(OneTimePassword $otp)
     {
         $parts = $this->encoder->decodeHash($otp->getHash());
 
-        if (count($parts) !== 4) {
+        if (count($parts) !== 3) {
             throw new AuthenticationException('The hash is invalid.');
         }
 
-        list($class, $username, $expires, $hash) = $parts;
+        list($username, $expires, $hash) = $parts;
         if (false === $username = base64_decode($username, true)) {
             throw new AuthenticationException('$username contains a character from outside the base64 alphabet.');
         }
@@ -101,11 +141,11 @@ class OneTimePasswordAuthenticationProvider implements AuthenticationProviderInt
                 throw new \RuntimeException(sprintf('The UserProviderInterface implementation must return an instance of UserInterface, but returned "%s".', get_class($user)));
             }
 
-            if (true !== $this->encoder->compareHashes($hash, $this->encoder->generateHash($class, $username, $expires, $user->getPassword()))) {
+            if (true !== $this->encoder->compareHashes($hash, $this->encoder->generateHash($username, $expires))) {
                 throw new AuthenticationException('The hash is invalid.');
             }
 
-            if ($expires < time()) {
+            if ($expires < microtime(true)) {
                 throw new AuthenticationException('The hash has expired.');
             }
 
@@ -113,12 +153,17 @@ class OneTimePasswordAuthenticationProvider implements AuthenticationProviderInt
 
         } catch (\Exception $ex) {
             if (!$ex instanceof AuthenticationException) {
-                $ex = new AuthenticationException($ex->getMessage(), null, $ex->getCode(), $ex);
+                // public function __construct($message = "", $code = 0, Exception $previous = null)
+                $ex = new AuthenticationException($ex->getMessage(), $ex->getCode(), $ex);
             }
             throw $ex;
         }
     }
 
+    /**
+     * @param TokenInterface $token
+     * @return bool
+     */
     public function supports(TokenInterface $token)
     {
         return $token instanceof OneTimePasswordToken;

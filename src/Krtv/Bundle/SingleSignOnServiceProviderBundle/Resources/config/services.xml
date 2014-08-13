@@ -1,0 +1,61 @@
+<?xml version="1.0" ?>
+<container xmlns="http://symfony.com/schema/dic/services"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <parameters>
+        <parameter key="krtv_single_sign_on_service_provider.encoder.otp.class">Krtv\SingleSignOn\Encoder\OneTimePasswordEncoder</parameter>
+
+        <parameter key="krtv_single_sign_on_service_provider.factory.class">Krtv\Bundle\SingleSignOnServiceProviderBundle\Factory\SingleSignOnFactory</parameter>
+        <parameter key="krtv_single_sign_on_service_provider.authentication.entry_point.sso.class">Krtv\Bundle\SingleSignOnServiceProviderBundle\EntryPoint\SingleSignOnAuthenticationEntryPoint</parameter>
+        <parameter key="krtv_single_sign_on_service_provider.authentication.provider.otp.class">Krtv\Bundle\SingleSignOnServiceProviderBundle\Authentication\Provider\OneTimePasswordAuthenticationProvider</parameter>
+        <parameter key="krtv_single_sign_on_service_provider.authentication.handler.authentication_failure.class">Krtv\Bundle\SingleSignOnServiceProviderBundle\Authentication\Handler\AuthenticationFailureHandler</parameter>
+        <parameter key="krtv_single_sign_on_service_provider.listener.otp.class">Krtv\Bundle\SingleSignOnServiceProviderBundle\Firewall\OneTimePasswordListener</parameter>
+    </parameters>
+
+    <services>
+        <service id="krtv_single_sign_on_service_provider.security.authentication.factory" class="%krtv_single_sign_on_service_provider.factory.class%">
+            <tag name="security.listener.factory"/>
+        </service>
+
+        <service id="krtv_single_sign_on_service_provider.security.authentication.encoder" class="%krtv_single_sign_on_service_provider.encoder.otp.class%">
+            <argument/> <!-- secret -->
+        </service>
+
+        <service id="krtv_single_sign_on_service_provider.security.authentication.entry_point" class="%krtv_single_sign_on_service_provider.authentication.entry_point.sso.class%">
+            <argument type="service" id="krtv_single_sign_on_service_provider.uri_signer" />
+            <argument type="service" id="security.http_utils"/>
+            <argument/> <!-- firewall options -->
+            <argument type="string">%krtv_single_sign_on_service_provider.host_scheme%</argument>
+            <argument type="string">%krtv_single_sign_on_service_provider.host%</argument>
+            <argument type="string">%krtv_single_sign_on_service_provider.login_path%</argument>
+        </service>
+
+        <service id="krtv_single_sign_on_service_provider.security.authentication.provider" class="%krtv_single_sign_on_service_provider.authentication.provider.otp.class%">
+            <tag name="monolog.logger" channel="security"/>
+            <argument/> <!-- user provider -->
+            <argument/> <!-- OTP manager -->
+            <argument/> <!-- Shared Provider Key -->
+            <argument type="service" id="krtv_single_sign_on_service_provider.security.authentication.encoder"/>
+            <argument type="service" id="logger" on-invalid="null"/>
+        </service>
+
+        <service id="krtv_single_sign_on_service_provider.security.authentication.listener" class="%krtv_single_sign_on_service_provider.listener.otp.class%" parent="security.authentication.listener.abstract" abstract="true">
+            <tag name="monolog.logger" channel="security"/>
+            <call method="setUriSigner">
+                <argument type="service" id="krtv_single_sign_on_service_provider.uri_signer"/>
+            </call>
+            <call method="setOtpParameter">
+                <argument type="string">%krtv_single_sign_on_service_provider.otp_parameter%</argument>
+            </call>
+        </service>
+
+        <service id="krtv_single_sign_on_service_provider.authentication.handler.authentication_failure.abstract" class="%krtv_single_sign_on_service_provider.authentication.handler.authentication_failure.class%" parent="security.authentication.failure_handler" abstract="true" public="false">
+
+        </service>
+
+        <service id="krtv_single_sign_on_service_provider.uri_signer" class="%uri_signer.class%">
+            <argument /> <!-- secret -->
+        </service>
+    </services>
+</container>
