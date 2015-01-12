@@ -26,9 +26,6 @@
             <argument type="service" id="krtv_single_sign_on_service_provider.uri_signer" />
             <argument type="service" id="security.http_utils"/>
             <argument/> <!-- firewall options -->
-            <argument type="string">%krtv_single_sign_on_service_provider.host_scheme%</argument>
-            <argument type="string">%krtv_single_sign_on_service_provider.host%</argument>
-            <argument type="string">%krtv_single_sign_on_service_provider.login_path%</argument>
         </service>
 
         <service id="krtv_single_sign_on_service_provider.security.authentication.provider" class="%krtv_single_sign_on_service_provider.authentication.provider.otp.class%">

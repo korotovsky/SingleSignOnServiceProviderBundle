@@ -31,49 +31,30 @@ class SingleSignOnAuthenticationEntryPoint implements AuthenticationEntryPointIn
     private $uriSigner;
 
     /**
-     * @var
-     */
-    private $ssoScheme;
-
-    /**
-     * @var string
-     */
-    private $ssoHost;
-
-    /**
-     * @var string
-     */
-    private $ssoLoginPath;
-
-    /**
      * @param \Symfony\Component\HttpKernel\UriSigner $signer
      * @param \Symfony\Component\Security\Http\HttpUtils $httpUtils
      * @param array $options
-     * @param string $ssoScheme
-     * @param string $ssoHost
-     * @param string $ssoLoginPath
      */
-    public function __construct(UriSigner $signer, HttpUtils $httpUtils, array $options = array(), $ssoScheme, $ssoHost, $ssoLoginPath)
+    public function __construct(UriSigner $signer, HttpUtils $httpUtils, array $options = array())
     {
         $this->httpUtils = $httpUtils;
         $this->uriSigner = $signer;
 
         $this->options = new ParameterBag($options);
-
-        $this->ssoScheme = $ssoScheme;
-        $this->ssoHost = $ssoHost;
-        $this->ssoLoginPath = $ssoLoginPath;
     }
 
     public function start(Request $request, AuthenticationException $authException = null)
     {
-        $host = $this->ssoHost;
-        $scheme = $this->ssoScheme;
-        $path = rtrim($this->ssoLoginPath, '/');
+        $host = $this->options->get('sso_host');
+        $scheme = $this->options->get('sso_scheme');
+        $path = rtrim($this->options->get('sso_path'), '/');
+        $ssoService = $this->options->get('sso_service');
+
         $checkPath = $this->options->get('check_path');
 
         $targetPathParameter = $this->options->get('target_path_parameter');
         $failurePathParameter = $this->options->get('failure_path_parameter');
+        $ssoServiceParameter = $this->options->get('sso_service_parameter');
 
         $redirectUri = $request->getUriForPath($checkPath);
 
@@ -86,6 +67,10 @@ class SingleSignOnAuthenticationEntryPoint implements AuthenticationEntryPointIn
 
         if ($failureUrl = $this->determineFailureUrl($request)) {
             $loginUrl = sprintf('%s&%s=%s', $loginUrl, $failurePathParameter, rawurlencode($failureUrl));
+        }
+
+        if ($ssoService) {
+            $loginUrl = sprintf('%s&%s=%s', $loginUrl, $ssoServiceParameter, $ssoService);
         }
 
         $loginUrl = $this->uriSigner->sign($loginUrl);

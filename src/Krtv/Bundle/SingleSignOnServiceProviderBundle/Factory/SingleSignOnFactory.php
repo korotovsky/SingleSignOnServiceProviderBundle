@@ -22,6 +22,9 @@ class SingleSignOnFactory extends AbstractFactory
         $this->addOption('sso_host');
         $this->addOption('sso_path', '/_sso/');
         $this->addOption('sso_failure_path', '/login');
+
+        $this->addOption('sso_service', '');
+        $this->addOption('sso_service_parameter', 'service');
     }
 
     /**
