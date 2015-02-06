@@ -68,7 +68,7 @@ class KrtvSingleSignOnServiceProviderExtension extends Extension
         $container->setAlias('sso_service_provider.uri_signer', new Alias('krtv_single_sign_on_service_provider.uri_signer'));
 
         $authenticationProviderDefinition = $container->getDefinition('krtv_single_sign_on_service_provider.security.authentication.provider');
-        $authenticationProviderDefinition->replaceArgument(1, new Reference('krtv_single_sign_on_service_provider.security.authentication.manager.otp'));
+        $authenticationProviderDefinition->replaceArgument(2, new Reference('krtv_single_sign_on_service_provider.security.authentication.manager.otp'));
     }
 
     public function getAlias()

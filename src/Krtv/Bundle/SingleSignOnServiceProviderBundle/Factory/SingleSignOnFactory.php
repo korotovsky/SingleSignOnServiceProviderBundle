@@ -80,7 +80,7 @@ class SingleSignOnFactory extends AbstractFactory
         $container
             ->setDefinition($providerId, new DefinitionDecorator('krtv_single_sign_on_service_provider.security.authentication.provider'))
             ->replaceArgument(0, new Reference($userProviderId))
-            ->replaceArgument(2, $id)
+            ->replaceArgument(4, $id)
         ;
 
         return $providerId;

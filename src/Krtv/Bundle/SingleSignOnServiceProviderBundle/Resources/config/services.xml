@@ -29,12 +29,13 @@
         </service>
 
         <service id="krtv_single_sign_on_service_provider.security.authentication.provider" class="%krtv_single_sign_on_service_provider.authentication.provider.otp.class%">
-            <tag name="monolog.logger" channel="security"/>
             <argument/> <!-- user provider -->
+            <argument type="service" id="security.user_checker"/>
             <argument/> <!-- OTP manager -->
-            <argument/> <!-- Shared Provider Key -->
             <argument type="service" id="krtv_single_sign_on_service_provider.security.authentication.encoder"/>
+            <argument/> <!-- Shared Provider Key -->
             <argument type="service" id="logger" on-invalid="null"/>
+            <tag name="monolog.logger" channel="security"/>
         </service>
 
         <service id="krtv_single_sign_on_service_provider.security.authentication.listener" class="%krtv_single_sign_on_service_provider.listener.otp.class%" parent="security.authentication.listener.abstract" abstract="true">
