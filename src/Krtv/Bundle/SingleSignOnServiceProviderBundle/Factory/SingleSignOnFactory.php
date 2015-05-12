@@ -25,6 +25,10 @@ class SingleSignOnFactory extends AbstractFactory
 
         $this->addOption('sso_service', '');
         $this->addOption('sso_service_parameter', 'service');
+
+        // Host where OTP validation will be checked. Keep null for current host & scheme
+        $this->addOption('sso_otp_scheme');
+        $this->addOption('sso_otp_host');
     }
 
     /**
