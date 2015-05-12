@@ -56,7 +56,7 @@ class SingleSignOnAuthenticationEntryPoint implements AuthenticationEntryPointIn
         $failurePathParameter = $this->options->get('failure_path_parameter');
         $ssoServiceParameter = $this->options->get('sso_service_parameter');
 
-        $redirectUri = $request->getUriForPath($checkPath);
+        $redirectUri = $this->getUriForPath($request, $checkPath);
 
         // make sure we keep the target path after login
         if ($targetUrl = $this->determineTargetUrl($request)) {
@@ -119,5 +119,22 @@ class SingleSignOnAuthenticationEntryPoint implements AuthenticationEntryPointIn
         }
 
         return $this->options->get('failure_path');
+    }
+
+    /**
+     * @param Request $request
+     * @param string  $checkPath
+     * @return string
+     */
+    protected function getUriForPath(Request $request, $checkPath)
+    {
+        $scheme = $this->options->get('sso_otp_scheme');
+        $host   = $this->options->get('sso_otp_host');
+
+        if ($scheme !== null && $host !== null) {
+            return sprintf('%s://%s%s', $scheme, $host, $checkPath);
+        }
+
+        return $request->getUriForPath($checkPath);
     }
 }
