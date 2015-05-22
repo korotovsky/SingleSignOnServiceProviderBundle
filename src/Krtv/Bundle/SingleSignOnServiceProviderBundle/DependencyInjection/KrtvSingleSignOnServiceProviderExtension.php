@@ -7,6 +7,7 @@ use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\Alias;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\DefinitionDecorator;
+use Symfony\Component\DependencyInjection\Exception\RuntimeException;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
@@ -50,9 +51,21 @@ class KrtvSingleSignOnServiceProviderExtension extends Extension
             $otpManagerDefinition = $container->getDefinition($otpManagerId);
             $otpManagerDefinition->replaceArgument(0, new Reference($providerId));
 
-            $providerDefinition = $container->getDefinition($providerId);
-            $providerDefinition->replaceArgument(0, new Reference($providerConfig['client']));
-            $providerDefinition->replaceArgument(1, $providerConfig['resource']);
+            switch ($providerName) {
+                case 'guzzle':
+                    $providerDefinition = $container->getDefinition($providerId);
+                    $providerDefinition->replaceArgument(0, new Reference($providerConfig['client']));
+                    $providerDefinition->replaceArgument(1, $providerConfig['resource']);
+
+                    break;
+                case 'service':
+                    $container->setAlias($providerId, new Alias($providerConfig['id']));
+
+                    break;
+                default:
+                    throw new RuntimeException(sprintf('Unsupported HTTP provider %s', $providerName));
+            }
+
         }
 
         $loader->load('services.xml');
