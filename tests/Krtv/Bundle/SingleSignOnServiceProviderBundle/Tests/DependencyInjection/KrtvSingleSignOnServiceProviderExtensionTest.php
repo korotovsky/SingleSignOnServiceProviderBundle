@@ -1,12 +1,13 @@
 <?php
 
-namespace Krtv\Bundle\SingleSignOnServiceProviderBundle\DependencyInjection;
+namespace Krtv\Bundle\SingleSignOnServiceProviderBunde\Tests\DependencyInjection;
 
+use Krtv\Bundle\SingleSignOnServiceProviderBundle\DependencyInjection\KrtvSingleSignOnServiceProviderExtension;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 
-/***
+/**
  * Class KrtvSingleSignOnServiceProviderExtensionTest
- * @package Krtv\Bundle\SingleSignOnServiceProviderBundle\DependencyInjection
+ * @package Krtv\Bundle\SingleSignOnServiceProviderBunde\Tests\DependencyInjection
  */
 class KrtvSingleSignOnServiceProviderExtensionTest extends \PHPUnit_Framework_TestCase
 {

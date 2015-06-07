@@ -1,6 +1,6 @@
 <?php
 
-namespace Krtv\Bundle\SingleSignOnServiceProviderBundle\DependencyInjection;
+namespace Krtv\Bundle\SingleSignOnServiceProviderBunde\Tests\DependencyInjection\Compiler;
 
 use Krtv\Bundle\SingleSignOnServiceProviderBundle\DependencyInjection\Compiler\ResolveSecretPass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -8,7 +8,7 @@ use Symfony\Component\DependencyInjection\Definition;
 
 /**
  * Class ResolveSecretPassTest
- * @package Krtv\Bundle\SingleSignOnServiceProviderBundle\DependencyInjection
+ * @package Krtv\Bundle\SingleSignOnServiceProviderBunde\Tests\DependencyInjection\Compiler
  */
 class ResolveSecretPassTest extends \PHPUnit_Framework_TestCase
 {
