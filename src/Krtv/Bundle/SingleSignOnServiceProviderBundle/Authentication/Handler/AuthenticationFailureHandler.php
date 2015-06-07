@@ -42,9 +42,7 @@ class AuthenticationFailureHandler extends DefaultAuthenticationFailureHandler
         }
 
         if ($this->options['failure_forward']) {
-            if (null !== $this->logger) {
-                $this->logger->debug(sprintf('Forwarding to %s', $this->options['failure_path']));
-            }
+            $this->log(sprintf('Forwarding to %s', $this->options['failure_path']));
 
             $subRequest = $this->httpUtils->createRequest($request, $this->options['failure_path']);
             $subRequest->attributes->set(SecurityContextInterface::AUTHENTICATION_ERROR, $exception);
@@ -52,9 +50,7 @@ class AuthenticationFailureHandler extends DefaultAuthenticationFailureHandler
             return $this->httpKernel->handle($subRequest, HttpKernelInterface::SUB_REQUEST);
         }
 
-        if (null !== $this->logger) {
-            $this->logger->debug(sprintf('Redirecting to %s', $this->options['failure_path']));
-        }
+        $this->log(sprintf('Redirecting to %s', $this->options['failure_path']));
 
         $request->getSession()->set(SecurityContextInterface::AUTHENTICATION_ERROR, $exception);
 
@@ -66,5 +62,15 @@ class AuthenticationFailureHandler extends DefaultAuthenticationFailureHandler
         $failureUrl = $this->uriSigner->sign($failureUrl);
 
         return $this->httpUtils->createRedirectResponse($request, $failureUrl);
+    }
+
+    /**
+     * @param string $message
+     */
+    private function log($message)
+    {
+        if (null !== $this->logger) {
+            $this->logger->debug($message);
+        }
     }
 }

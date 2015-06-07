@@ -3,7 +3,6 @@
 namespace Krtv\Bundle\SingleSignOnServiceProviderBundle\Firewall;
 
 use Krtv\Bundle\SingleSignOnServiceProviderBundle\Authentication\Token\OneTimePasswordToken;
-
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\UriSigner;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
@@ -63,9 +62,8 @@ class OneTimePasswordListener extends AbstractAuthenticationListener
 
             return $token;
         } catch (AuthenticationException $e) {
-            // you might log something here
             if (null !== $this->logger) {
-                $this->logger->warn(sprintf('Not authenticated with OneTimePassword: ' . $e->getMessage()));
+                $this->logger->warning(sprintf('Not authenticated with OneTimePassword: ' . $e->getMessage()));
             }
 
             throw $e;

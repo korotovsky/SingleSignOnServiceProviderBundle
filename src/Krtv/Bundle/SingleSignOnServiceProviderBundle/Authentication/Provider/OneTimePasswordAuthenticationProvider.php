@@ -2,12 +2,12 @@
 
 namespace Krtv\Bundle\SingleSignOnServiceProviderBundle\Authentication\Provider;
 
+use Krtv\Bundle\SingleSignOnServiceProviderBundle\Authentication\Token\OneTimePasswordToken;
 use Krtv\SingleSignOn\Model\OneTimePassword;
 use Krtv\SingleSignOn\Encoder\OneTimePasswordEncoder;
 use Krtv\SingleSignOn\Manager\OneTimePasswordManagerInterface;
-use Krtv\Bundle\SingleSignOnServiceProviderBundle\Authentication\Token\OneTimePasswordToken;
-
-use Symfony\Component\HttpKernel\Log\LoggerInterface;
+use Krtv\SingleSignOn\Model\OneTimePasswordInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationServiceException;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\UserCheckerInterface;
@@ -83,7 +83,7 @@ class OneTimePasswordAuthenticationProvider implements AuthenticationProviderInt
 
     /**
      * @param TokenInterface $token
-     * @return TokenInterface|void
+     * @return PreAuthenticatedToken
      */
     public function authenticate(TokenInterface $token)
     {
@@ -113,7 +113,7 @@ class OneTimePasswordAuthenticationProvider implements AuthenticationProviderInt
             }
         } catch (UnsupportedUserException $unSupported) {
             if (null !== $this->logger) {
-                $this->logger->warn('User class for OneTimePassword not supported.');
+                $this->logger->warning('User class for OneTimePassword not supported.');
             }
         } catch (AuthenticationException $invalid) {
             if (null !== $this->logger) {
@@ -125,10 +125,10 @@ class OneTimePasswordAuthenticationProvider implements AuthenticationProviderInt
     }
 
     /**
-     * @param OneTimePassword $otp
+     * @param OneTimePasswordInterface $otp
      * @return UserInterface
      */
-    public function authenticateOneTimePassword(OneTimePassword $otp)
+    public function authenticateOneTimePassword(OneTimePasswordInterface $otp)
     {
         $parts = $this->otpEncoder->decodeHash($otp->getHash());
 
