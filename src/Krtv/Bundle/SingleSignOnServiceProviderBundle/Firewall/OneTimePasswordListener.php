@@ -3,7 +3,6 @@
 namespace Krtv\Bundle\SingleSignOnServiceProviderBundle\Firewall;
 
 use Krtv\Bundle\SingleSignOnServiceProviderBundle\Authentication\Token\OneTimePasswordToken;
-
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\UriSigner;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;

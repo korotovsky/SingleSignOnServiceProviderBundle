@@ -3,6 +3,7 @@
 namespace Krtv\Bundle\SingleSignOnServiceProviderBundle\Authentication\Token;
 
 use Symfony\Component\Security\Core\Authentication\Token\AbstractToken;
+use Symfony\Component\Security\Core\Role\RoleInterface;
 
 /**
  * Class OneTimePasswordToken
@@ -16,8 +17,8 @@ class OneTimePasswordToken extends AbstractToken
     private $credentials;
 
     /**
-     * @param array|\Symfony\Component\Security\Core\Role\RoleInterface[] $credentials
-     * @param array $roles
+     * @param string $credentials
+     * @param array|RoleInterface[] $roles
      */
     public function __construct($credentials, array $roles = array())
     {

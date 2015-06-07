@@ -6,8 +6,9 @@ use Krtv\SingleSignOn\Model\OneTimePassword;
 use Krtv\SingleSignOn\Encoder\OneTimePasswordEncoder;
 use Krtv\SingleSignOn\Manager\OneTimePasswordManagerInterface;
 use Krtv\Bundle\SingleSignOnServiceProviderBundle\Authentication\Token\OneTimePasswordToken;
-
-use Symfony\Component\HttpKernel\Log\LoggerInterface;
+use Krtv\SingleSignOn\Model\OneTimePasswordInterface;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
@@ -73,12 +74,11 @@ class OneTimePasswordAuthenticationProvider implements AuthenticationProviderInt
 
     /**
      * @param TokenInterface $token
-     * @return TokenInterface|void
+     * @return PreAuthenticatedToken
      */
     public function authenticate(TokenInterface $token)
     {
         try {
-
             $otp = $this->otpManager->get($token->getCredentials());
 
             if (!$otp || !$this->otpManager->isValid($otp)) {
@@ -98,14 +98,13 @@ class OneTimePasswordAuthenticationProvider implements AuthenticationProviderInt
             }
 
             return new PreAuthenticatedToken($user, $user->getPassword(), $this->providerKey, $user->getRoles());
-
         } catch (UsernameNotFoundException $notFound) {
             if (null !== $this->logger) {
                 $this->logger->info('User for OneTimePassword not found.');
             }
         } catch (UnsupportedUserException $unSupported) {
             if (null !== $this->logger) {
-                $this->logger->warn('User class for OneTimePassword not supported.');
+                $this->logger->warning('User class for OneTimePassword not supported.');
             }
         } catch (AuthenticationException $invalid) {
             if (null !== $this->logger) {
@@ -117,10 +116,10 @@ class OneTimePasswordAuthenticationProvider implements AuthenticationProviderInt
     }
 
     /**
-     * @param OneTimePassword $otp
+     * @param OneTimePasswordInterface $otp
      * @return UserInterface
      */
-    public function authenticateOneTimePassword(OneTimePassword $otp)
+    public function authenticateOneTimePassword(OneTimePasswordInterface $otp)
     {
         $parts = $this->encoder->decodeHash($otp->getHash());
 
@@ -134,7 +133,6 @@ class OneTimePasswordAuthenticationProvider implements AuthenticationProviderInt
         }
 
         try {
-
             $user = $this->getUserProvider()->loadUserByUsername($username);
 
             if (!$user instanceof UserInterface) {
@@ -150,12 +148,11 @@ class OneTimePasswordAuthenticationProvider implements AuthenticationProviderInt
             }
 
             return $user;
-
         } catch (\Exception $ex) {
             if (!$ex instanceof AuthenticationException) {
-                // public function __construct($message = "", $code = 0, Exception $previous = null)
                 $ex = new AuthenticationException($ex->getMessage(), $ex->getCode(), $ex);
             }
+
             throw $ex;
         }
     }
