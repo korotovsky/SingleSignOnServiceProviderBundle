@@ -25,7 +25,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Krtv\\Bundle\\SingleSignOnServiceProviderBundle\\": "src/Krtv/Bundle/SingleSignOnServiceProviderBundle"
+            "Krtv\\Bundle\\SingleSignOnServiceProviderBundle\\": "src/Krtv/Bundle/SingleSignOnServiceProviderBundle",
+            "Krtv\\Bundle\\SingleSignOnServiceProviderBundle\\Tests\\": "tests/Krtv/Bundle/SingleSignOnServiceProviderBundle/Tests"
         }
     }
 }
