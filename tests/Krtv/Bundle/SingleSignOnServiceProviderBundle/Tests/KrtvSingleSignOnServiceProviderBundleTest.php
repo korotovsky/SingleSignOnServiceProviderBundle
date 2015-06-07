@@ -21,7 +21,7 @@ class KrtvSingleSignOnServiceProviderBundleTest extends \PHPUnit_Framework_TestC
             ->with($this->isInstanceOf('Krtv\Bundle\SingleSignOnServiceProviderBundle\Factory\SingleSignOnFactory'));
 
         $container = $this->getMock('Symfony\Component\DependencyInjection\ContainerBuilder');
-        $container->expects($this->exactly(2))
+        $container->expects($this->exactly(1))
             ->method('addCompilerPass')
             ->with($this->isInstanceOf('Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface'));
         $container->expects($this->once())

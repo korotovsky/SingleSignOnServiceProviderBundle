@@ -2,15 +2,15 @@
 
 namespace Krtv\Bundle\SingleSignOnServiceProviderBundle\DependencyInjection;
 
-use Krtv\Bundle\SingleSignOnServiceProviderBundle\DependencyInjection\Compiler\AddUriSignerSecretPass;
+use Krtv\Bundle\SingleSignOnServiceProviderBundle\DependencyInjection\Compiler\ResolveSecretPass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 
 /**
- * Class AddUriSignerSecretPassTest
+ * Class ResolveSecretPassTest
  * @package Krtv\Bundle\SingleSignOnServiceProviderBundle\DependencyInjection
  */
-class AddUriSignerSecretPassTest extends \PHPUnit_Framework_TestCase
+class ResolveSecretPassTest extends \PHPUnit_Framework_TestCase
 {
     /**
      * @var ContainerBuilder|\PHPUnit_Framework_MockObject_MockObject
@@ -37,18 +37,18 @@ class AddUriSignerSecretPassTest extends \PHPUnit_Framework_TestCase
             ->method('replaceArgument')
             ->with(0, 'secret_is_very_secret');
 
+        $signer = $this->getMockBuilder('Symfony\Component\DependencyInjection\Definition')
+            ->getMock();
+        $signer->expects($this->once())
+            ->method('replaceArgument')
+            ->with(0, 'secret_is_very_secret');
+
         $this->container->expects($this->any())
             ->method('getDefinition')
             ->willReturnMap(array(
-                array('krtv_single_sign_on_service_provider.uri_signer', $encoder),
+                array('krtv_single_sign_on_service_provider.security.authentication.encoder', $encoder),
+                array('krtv_single_sign_on_service_provider.uri_signer', $signer)
             ));
-
-        $this->container->expects($this->any())
-            ->method('hasDefinition')
-            ->willReturnMap(array(
-                array('krtv_single_sign_on_service_provider.uri_signer', true),
-            ));
-
     }
 
     /**
@@ -56,7 +56,7 @@ class AddUriSignerSecretPassTest extends \PHPUnit_Framework_TestCase
      */
     public function testProcess()
     {
-        $pass = new AddUriSignerSecretPass();
+        $pass = new ResolveSecretPass();
         $pass->process($this->container);
     }
 }
