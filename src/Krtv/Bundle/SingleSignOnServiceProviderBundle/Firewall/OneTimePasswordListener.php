@@ -62,9 +62,8 @@ class OneTimePasswordListener extends AbstractAuthenticationListener
 
             return $token;
         } catch (AuthenticationException $e) {
-            // you might log something here
             if (null !== $this->logger) {
-                $this->logger->warn(sprintf('Not authenticated with OneTimePassword: ' . $e->getMessage()));
+                $this->logger->warning(sprintf('Not authenticated with OneTimePassword: ' . $e->getMessage()));
             }
 
             throw $e;
