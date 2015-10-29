@@ -11,6 +11,12 @@
         <parameter key="krtv_single_sign_on_service_provider.authentication.provider.otp.class">Krtv\Bundle\SingleSignOnServiceProviderBundle\Authentication\Provider\OneTimePasswordAuthenticationProvider</parameter>
         <parameter key="krtv_single_sign_on_service_provider.authentication.handler.authentication_failure.class">Krtv\Bundle\SingleSignOnServiceProviderBundle\Authentication\Handler\AuthenticationFailureHandler</parameter>
         <parameter key="krtv_single_sign_on_service_provider.listener.otp.class">Krtv\Bundle\SingleSignOnServiceProviderBundle\Firewall\OneTimePasswordListener</parameter>
+
+        <parameter key="krtv_single_sign_on_service_provider.context_listener.class">Krtv\Bundle\SingleSignOnServiceProviderBundle\EventListener\AuthenticationContextSubscriber</parameter>
+        <parameter key="krtv_single_sign_on_service_provider.context_factory.class">Krtv\Bundle\SingleSignOnServiceProviderBundle\Context\AuthenticationContextFactory</parameter>
+        <parameter key="krtv_single_sign_on_service_provider.context_factory.attribute">_sso_context</parameter>
+
+        <parameter key="krtv_single_sign_on_service_provider.twig.extension.url_signer.class">Krtv\Bundle\SingleSignOnServiceProviderBundle\Twig\Extension\UrlSignerExtension</parameter>
     </parameters>
 
     <services>
@@ -23,9 +29,9 @@
         </service>
 
         <service id="krtv_single_sign_on_service_provider.security.authentication.entry_point" class="%krtv_single_sign_on_service_provider.authentication.entry_point.sso.class%">
+            <argument type="service" id="krtv_single_sign_on_service_provider.context_factory" />
             <argument type="service" id="krtv_single_sign_on_service_provider.uri_signer" />
             <argument type="service" id="security.http_utils"/>
-            <argument/> <!-- firewall options -->
         </service>
 
         <service id="krtv_single_sign_on_service_provider.security.authentication.provider" class="%krtv_single_sign_on_service_provider.authentication.provider.otp.class%">
@@ -35,17 +41,30 @@
             <argument type="service" id="krtv_single_sign_on_service_provider.security.authentication.encoder"/>
             <argument/> <!-- Shared Provider Key -->
             <argument type="service" id="logger" on-invalid="null"/>
+
             <tag name="monolog.logger" channel="security"/>
         </service>
 
         <service id="krtv_single_sign_on_service_provider.security.authentication.listener" class="%krtv_single_sign_on_service_provider.listener.otp.class%" parent="security.authentication.listener.abstract" abstract="true">
-            <tag name="monolog.logger" channel="security"/>
             <call method="setUriSigner">
                 <argument type="service" id="krtv_single_sign_on_service_provider.uri_signer"/>
             </call>
             <call method="setOtpParameter">
                 <argument type="string">%krtv_single_sign_on_service_provider.otp_parameter%</argument>
             </call>
+
+            <tag name="monolog.logger" channel="security"/>
+        </service>
+
+        <service id="krtv_single_sign_on_service_provider.context_listener" class="%krtv_single_sign_on_service_provider.context_listener.class%">
+            <argument type="service" id="krtv_single_sign_on_service_provider.context_factory"/>
+
+            <tag name="kernel.event_subscriber"/>
+        </service>
+
+        <service id="krtv_single_sign_on_service_provider.context_factory.abstract" class="%krtv_single_sign_on_service_provider.context_factory.class%" abstract="true" public="false">
+            <argument /> <!-- firewall options -->
+            <argument type="string">%krtv_single_sign_on_service_provider.context_factory.attribute%</argument>
         </service>
 
         <service id="krtv_single_sign_on_service_provider.authentication.handler.authentication_failure.abstract" class="%krtv_single_sign_on_service_provider.authentication.handler.authentication_failure.class%" parent="security.authentication.failure_handler" abstract="true" public="false">
@@ -54,6 +73,12 @@
 
         <service id="krtv_single_sign_on_service_provider.uri_signer" class="%uri_signer.class%">
             <argument /> <!-- secret -->
+        </service>
+
+        <service id="krtv_single_sign_on_service_provider.twig.extension.url_signer" class="%krtv_single_sign_on_service_provider.twig.extension.url_signer.class%" public="false">
+            <argument type="service" id="krtv_single_sign_on_service_provider.uri_signer"/>
+
+            <tag name="twig.extension"/>
         </service>
     </services>
 </container>

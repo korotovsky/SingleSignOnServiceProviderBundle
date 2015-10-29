@@ -2,6 +2,8 @@
 
 namespace Krtv\Bundle\SingleSignOnServiceProviderBundle\EntryPoint;
 
+use Krtv\Bundle\SingleSignOnServiceProviderBundle\Context\AuthenticationContext;
+use Krtv\Bundle\SingleSignOnServiceProviderBundle\Context\AuthenticationContextFactory;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\UriSigner;
@@ -16,9 +18,9 @@ use Symfony\Component\Security\Http\HttpUtils;
 class SingleSignOnAuthenticationEntryPoint implements AuthenticationEntryPointInterface
 {
     /**
-     * @var ParameterBag
+     * @var AuthenticationContextFactory
      */
-    private $options;
+    private $contextFactory;
 
     /**
      * @var HttpUtils
@@ -31,110 +33,102 @@ class SingleSignOnAuthenticationEntryPoint implements AuthenticationEntryPointIn
     private $uriSigner;
 
     /**
-     * @param \Symfony\Component\HttpKernel\UriSigner $signer
-     * @param \Symfony\Component\Security\Http\HttpUtils $httpUtils
-     * @param array $options
+     * @param AuthenticationContextFactory $contextFactory
+     * @param UriSigner $signer
+     * @param HttpUtils $httpUtils
      */
-    public function __construct(UriSigner $signer, HttpUtils $httpUtils, array $options = array())
+    public function __construct(AuthenticationContextFactory $contextFactory, UriSigner $signer, HttpUtils $httpUtils)
     {
-        $this->httpUtils = $httpUtils;
-        $this->uriSigner = $signer;
-
-        $this->options = new ParameterBag($options);
+        $this->contextFactory = $contextFactory;
+        $this->httpUtils      = $httpUtils;
+        $this->uriSigner      = $signer;
     }
 
     public function start(Request $request, AuthenticationException $authException = null)
     {
-        $host = $this->options->get('sso_host');
-        $scheme = $this->options->get('sso_scheme');
-        $path = rtrim($this->options->get('sso_path'), '/');
-        $ssoService = $this->options->get('sso_service');
+        $context = $request->attributes->get($this->contextFactory->getAttribute()); /* @var AuthenticationContext $context */
+        $options = $context->getOptions();
 
-        $checkPath = $this->options->get('check_path');
+        $targetPathParameter    = $options->get('target_path_parameter');
+        $failurePathParameter   = $options->get('failure_path_parameter');
 
-        $targetPathParameter = $this->options->get('target_path_parameter');
-        $failurePathParameter = $this->options->get('failure_path_parameter');
-        $ssoServiceParameter = $this->options->get('sso_service_parameter');
+        $serviceParameter       = $options->get('sso_service_parameter');
+        $serviceExtraParameter  = $options->get('sso_service_extra_parameter');
 
-        $redirectUri = $this->getUriForPath($request, $checkPath);
+        $loginRequiredParameter = $options->get('sso_login_required_parameter');
 
-        // make sure we keep the target path after login
-        if ($targetUrl = $this->determineTargetUrl($request)) {
-            $redirectUri = sprintf('%s/?%s=%s', rtrim($redirectUri, '/'), $targetPathParameter, rawurlencode($targetUrl));
+        $scheme = $options->get('sso_scheme');
+        $host   = $options->get('sso_host');
+        $path   = $options->get('sso_path');
+
+        // OTP validate callback should point to /otp/validate/ route on service provider
+        // For example: http://service.provider/otp/validate/
+        $otpValidateUrl = $context->getOtpValidationPath($request);
+
+        // Target path is a URL or path to previous URL or it
+        // should be an any route which user should visit after OTP valid check.
+        $targetUrl      = $context->getTargetPath($request);
+
+        // Add extra parameters to Target URL which are marked as proxy parameters.
+        if ($context->getServiceProxy()->count()) {
+            if (strpos($targetUrl, '?') === false) {
+                $targetUrl .= '?';
+            }
+
+            $params = array();
+            foreach ($context->getServiceProxy() as $name => $value) {
+                $params[$name] = $context->getServiceExtra()->get($name);
+            }
+
+            $targetUrl .= http_build_query($params);
         }
 
-        $loginUrl = sprintf('%s://%s%s/?%s=%s', $scheme, $host, $path, $targetPathParameter, rawurlencode($redirectUri));
+        // Sign Target URL to be able verify signature later
+        $targetUrl = $this->uriSigner->sign($targetUrl);
 
-        if ($failureUrl = $this->determineFailureUrl($request)) {
-            $loginUrl = sprintf('%s&%s=%s', $loginUrl, $failurePathParameter, rawurlencode($failureUrl));
+        // User will be redirected to this route if he isn't authenticated on identity provider
+        // or if identity provider returned invalid response on OTP check.
+        $failureUrl     = $context->getFailurePath($request);
+
+        // Failure URL should contain Target URL to be able catch it if user came back from identity provider
+        if ($failureUrl) {
+            if (strpos($failureUrl, '?') === false) {
+                $separator = '?';
+            } else {
+                $separator = '&';
+            }
+
+            $failureUrl .= sprintf('%s%s=%s', $separator, $targetPathParameter, rawurlencode($targetUrl));
+
+            // If failure url is the same with current host we add a login_required=1 parameter
+            // To be able to suppress SSO Authentication attempt.
+            // Make sure that your failure url is accessible as guest.
+            if (strpos($failureUrl, $request->getSchemeAndHttpHost()) === 0) {
+                $failureUrl .= sprintf('&%s=%s', $loginRequiredParameter, $options->get('sso_login_required'));
+            }
         }
 
-        if ($ssoService) {
-            $loginUrl = sprintf('%s&%s=%s', $loginUrl, $ssoServiceParameter, $ssoService);
+        $redirectUri = sprintf('%s/?%s=%s', rtrim($otpValidateUrl, '/'), $targetPathParameter, rawurlencode($targetUrl));
+
+        // Build SSO login URL.
+        $redirectUri = sprintf('%s://%s%s/?%s=%s', $scheme, $host, rtrim($path, '/'), $targetPathParameter, rawurlencode($redirectUri));
+        $redirectUri = sprintf('%s&%s=%s', $redirectUri, $failurePathParameter, rawurlencode($failureUrl));
+
+        // Append service provider name to root sso login url to be able determine it on identity provider.
+        if ($context->getService()) {
+            $redirectUri .= sprintf('&%s=%s', $serviceParameter, $context->getService());
         }
 
-        $loginUrl = $this->uriSigner->sign($loginUrl);
-
-        return $this->httpUtils->createRedirectResponse($request, $loginUrl);
-    }
-
-    /**
-     * @see Symfony\Component\Security\Http\Firewall\AbstractAuthenticationListener:determineTargetUrl
-     */
-    protected function determineTargetUrl(Request $request)
-    {
-        if ($this->options->get('always_use_default_target_path') === true) {
-            return $this->options->get('default_target_path');
+        // Append all extra parameters to root sso login url
+        if ($context->getService() && $context->getServiceExtra()->count()) {
+            $redirectUri .= sprintf('&%s', http_build_query(array(
+                $serviceExtraParameter => $context->getServiceExtra()->all()
+            )));
         }
 
-        if ($targetUrl = $request->get($this->options->get('target_path_parameter'), null, true)) {
-            return $targetUrl;
-        }
+        // Sign data
+        $redirectUri = $this->uriSigner->sign($redirectUri);
 
-        $session = $request->getSession();
-        if ($targetUrl = $session->get(sprintf('_security.%s.target_path', $this->options->get('firewall_id')))) {
-            return $targetUrl;
-        }
-
-        if ($this->options->get('use_referer') && $targetUrl = $request->headers->get('Referer')) {
-            return $targetUrl;
-        }
-
-        return $this->options->get('default_target_path');
-    }
-
-    /**
-     * @param Request $request
-     * @return string
-     */
-    protected function determineFailureUrl(Request $request)
-    {
-        if ($failureUrl = $request->get($this->options->get('failure_path_parameter'), null, true)) {
-            return $failureUrl;
-        }
-
-        $session = $request->getSession();
-        if ($failureUrl = $session->get(sprintf('_security.%s.failure_path', $this->options->get('firewall_id')))) {
-            return $failureUrl;
-        }
-
-        return $this->options->get('failure_path');
-    }
-
-    /**
-     * @param Request $request
-     * @param string  $checkPath
-     * @return string
-     */
-    protected function getUriForPath(Request $request, $checkPath)
-    {
-        $scheme = $this->options->get('sso_otp_scheme');
-        $host   = $this->options->get('sso_otp_host');
-
-        if ($scheme !== null && $host !== null) {
-            return sprintf('%s://%s%s', $scheme, $host, $checkPath);
-        }
-
-        return $request->getUriForPath($checkPath);
+        return $this->httpUtils->createRedirectResponse($request, $redirectUri);
     }
 }

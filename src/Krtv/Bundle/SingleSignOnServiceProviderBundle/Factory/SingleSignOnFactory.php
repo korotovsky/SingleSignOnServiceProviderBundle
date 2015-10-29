@@ -26,6 +26,12 @@ class SingleSignOnFactory extends AbstractFactory
         $this->addOption('sso_service', '');
         $this->addOption('sso_service_parameter', 'service');
 
+        $this->addOption('sso_service_extra', array());
+        $this->addOption('sso_service_extra_parameter', 'service_extra');
+
+        $this->addOption('sso_login_required', 1);
+        $this->addOption('sso_login_required_parameter', 'login_required');
+
         // Host where OTP validation will be checked. Keep null for current host & scheme
         $this->addOption('sso_otp_scheme');
         $this->addOption('sso_otp_host');
@@ -103,10 +109,14 @@ class SingleSignOnFactory extends AbstractFactory
 
         // add firewall id
         $config['firewall_id'] = $id;
+        $config = $this->getOptions($config);
 
         $container
-            ->setDefinition($entryPointId, new DefinitionDecorator('krtv_single_sign_on_service_provider.security.authentication.entry_point'))
-            ->replaceArgument(2, $config);
+            ->setDefinition($entryPointId, new DefinitionDecorator('krtv_single_sign_on_service_provider.security.authentication.entry_point'));
+
+        $container
+            ->setDefinition('krtv_single_sign_on_service_provider.context_factory', new DefinitionDecorator('krtv_single_sign_on_service_provider.context_factory.abstract'))
+            ->replaceArgument(0, $config);
 
         // set options to container for use by other classes
         $container->setParameter('krtv_single_sign_on_service_provider.options.' . $id, $config);
@@ -126,12 +136,7 @@ class SingleSignOnFactory extends AbstractFactory
             return $config['failure_handler'];
         }
 
-        $options = array_intersect_key($config, $this->defaultFailureHandlerOptions);
-        if ($config['sso_scheme'] && $config['sso_host'] && $config['sso_failure_path']) {
-            $options['failure_path'] = sprintf('%s://%s%s', $config['sso_scheme'], $config['sso_host'], $config['sso_failure_path']);
-        } elseif ($config['sso_failure_path']) {
-            $options['failure_path'] = $config['sso_failure_path'];
-        }
+        $options = array_intersect_key($this->getOptions($config), $this->defaultFailureHandlerOptions);
 
         $id = $this->getFailureHandlerId($id);
 
@@ -140,5 +145,22 @@ class SingleSignOnFactory extends AbstractFactory
         $failureHandler->addMethodCall('setUriSigner', array(new Reference('krtv_single_sign_on_service_provider.uri_signer')));
 
         return $id;
+    }
+
+    /**
+     * @param $options
+     * @return array
+     */
+    protected function getOptions($options)
+    {
+        if ($options['sso_failure_path'] && strpos($options['sso_failure_path'], 'http') === 0) {
+            $options['failure_path'] = $options['sso_failure_path'];
+        } elseif ($options['sso_failure_path'] && $options['sso_scheme'] && $options['sso_host']) {
+            $options['failure_path'] = sprintf('%s://%s%s', $options['sso_scheme'], $options['sso_host'], $options['sso_failure_path']);
+        } elseif ($options['sso_failure_path']) {
+            $options['failure_path'] = $options['sso_failure_path'];
+        }
+
+        return $options;
     }
 }

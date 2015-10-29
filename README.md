@@ -1,9 +1,9 @@
 Single Sign On Service Provider
 ================================
 
-[![Build Status](https://scrutinizer-ci.com/g/korotovsky/SingleSignOnServiceProviderBundle/badges/build.png?b=0.2.x)](https://scrutinizer-ci.com/g/korotovsky/SingleSignOnServiceProviderBundle/build-status/0.2.x)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/korotovsky/SingleSignOnServiceProviderBundle/badges/quality-score.png?b=0.2.x)](https://scrutinizer-ci.com/g/korotovsky/SingleSignOnServiceProviderBundle/?branch=0.2.x)
-[![Code Coverage](https://scrutinizer-ci.com/g/korotovsky/SingleSignOnServiceProviderBundle/badges/coverage.png?b=0.2.x)](https://scrutinizer-ci.com/g/korotovsky/SingleSignOnServiceProviderBundle/?branch=0.2.x)
+[![Build Status](https://scrutinizer-ci.com/g/korotovsky/SingleSignOnServiceProviderBundle/badges/build.png?b=0.3.x)](https://scrutinizer-ci.com/g/korotovsky/SingleSignOnServiceProviderBundle/build-status/0.3.x)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/korotovsky/SingleSignOnServiceProviderBundle/badges/quality-score.png?b=0.3.x)](https://scrutinizer-ci.com/g/korotovsky/SingleSignOnServiceProviderBundle/?branch=0.3.x)
+[![Code Coverage](https://scrutinizer-ci.com/g/korotovsky/SingleSignOnServiceProviderBundle/badges/coverage.png?b=0.3.x)](https://scrutinizer-ci.com/g/korotovsky/SingleSignOnServiceProviderBundle/?branch=0.3.x)
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/d68cc257-6cfc-4e66-9c51-28be57b347c4/mini.png?v=1)](https://insight.sensiolabs.com/projects/d68cc257-6cfc-4e66-9c51-28be57b347c4)
 
 Disclaimer
@@ -54,15 +54,24 @@ Modify security settings:
             sso:
                 require_previous_session: false
                 provider:                 main
-                check_path:               /otp/validate/ # Same as in app/config/routing.yml
+                check_path:               /otp/validate/     # Same as in app/config/routing.yml
 
-                sso_scheme:       http              # Required
-                sso_host:         idp.example.com   # Required
-                sso_otp_scheme:   http              # Optional
-                sso_otp_host:     consumer1.com     # Optional
-                sso_failure_path: /login
-                sso_path:         /sso/login/       # SSO endpoint on IdP.
-                sso_service:      consumer1         # Consumer name
+                sso_scheme:               http               # Required
+                sso_host:                 idp.example.com    # Required
+
+                sso_otp_scheme:           http               # Optional
+                sso_otp_host:             consumer1.com      # Optional
+
+                sso_failure_path:         /login             # Can also be as an absolute path to service provider
+                sso_path:                 /sso/login/        # SSO endpoint on IdP.
+
+                sso_service_extra:           null            # Default service extra parameters. Optional.
+                sso_service_extra_parameter: service_extra   # Parameter name. Optional
+
+                sso_login_required:           1              # Optional
+                sso_login_required_parameter: login_required # Optional
+
+                sso_service:                  consumer1      # Consumer name
 
             logout:
                 invalidate_session: true

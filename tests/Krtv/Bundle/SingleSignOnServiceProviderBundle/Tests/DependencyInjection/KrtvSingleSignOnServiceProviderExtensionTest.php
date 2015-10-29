@@ -18,7 +18,6 @@ class KrtvSingleSignOnServiceProviderExtensionTest extends \PHPUnit_Framework_Te
     {
         $containerMock = $this->getMockBuilder('Symfony\Component\DependencyInjection\ContainerBuilder')
             ->enableProxyingToOriginalMethods()
-            ->disableOriginalConstructor()
             ->setConstructorArgs(array(
                 new ParameterBag()
             ))
@@ -62,8 +61,11 @@ class KrtvSingleSignOnServiceProviderExtensionTest extends \PHPUnit_Framework_Te
             'krtv_single_sign_on_service_provider.security.authentication.entry_point',
             'krtv_single_sign_on_service_provider.security.authentication.provider',
             'krtv_single_sign_on_service_provider.security.authentication.listener',
+            'krtv_single_sign_on_service_provider.context_listener',
+            'krtv_single_sign_on_service_provider.context_factory.abstract',
             'krtv_single_sign_on_service_provider.authentication.handler.authentication_failure.abstract',
             'krtv_single_sign_on_service_provider.uri_signer',
+            'krtv_single_sign_on_service_provider.twig.extension.url_signer',
         );
 
         foreach ($services as $service) {

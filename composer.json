@@ -15,9 +15,14 @@
         }
     ],
     "require": {
-        "php": ">=5.3.3",
-        "symfony/symfony": ">=2.2",
-        "korotovsky/sso-library": "0.2.*",
+        "php": ">=5.5",
+
+        "doctrine/orm": "~2.3",
+
+        "symfony/symfony": "~3.0",
+
+        "korotovsky/sso-library": "~0.3.0",
+
         "ext-openssl": "*"
     },
     "require-dev": {
