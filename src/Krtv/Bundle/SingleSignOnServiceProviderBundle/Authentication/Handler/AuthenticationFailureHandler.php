@@ -6,7 +6,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\UriSigner;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
-use Symfony\Component\Security\Core\SecurityContextInterface;
+use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Http\Authentication\DefaultAuthenticationFailureHandler;
 
 /**
@@ -45,14 +45,14 @@ class AuthenticationFailureHandler extends DefaultAuthenticationFailureHandler
             $this->log(sprintf('Forwarding to %s', $this->options['failure_path']));
 
             $subRequest = $this->httpUtils->createRequest($request, $this->options['failure_path']);
-            $subRequest->attributes->set(SecurityContextInterface::AUTHENTICATION_ERROR, $exception);
+            $subRequest->attributes->set(Security::AUTHENTICATION_ERROR, $exception);
 
             return $this->httpKernel->handle($subRequest, HttpKernelInterface::SUB_REQUEST);
         }
 
         $this->log(sprintf('Redirecting to %s', $this->options['failure_path']));
 
-        $request->getSession()->set(SecurityContextInterface::AUTHENTICATION_ERROR, $exception);
+        $request->getSession()->set(Security::AUTHENTICATION_ERROR, $exception);
 
         $failureUrl = $this->options['failure_path'];
         $failureUrl .= strpos($failureUrl, '?') !== false ? '&' : '?';
