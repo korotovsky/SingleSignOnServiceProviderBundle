@@ -71,7 +71,7 @@
 
         </service>
 
-        <service id="krtv_single_sign_on_service_provider.uri_signer" class="%uri_signer.class%">
+        <service id="krtv_single_sign_on_service_provider.uri_signer" class="Symfony\Component\HttpKernel\UriSigner">
             <argument /> <!-- secret -->
         </service>
 
