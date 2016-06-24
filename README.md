@@ -42,7 +42,7 @@ Enable route to validate OTP:
 otp:
     # this needs to be the same as the check_path, specified later on in security.yml
     path: /otp/validate/
-````
+```
 
 Modify security settings:
 
@@ -84,29 +84,30 @@ Configure SingleSignOnServiceProvider bundle:
 ``` yaml
 # app/config/config.yml
 krtv_single_sign_on_service_provider:
-    host:                 idp.example.com
+    host:                 consumer1.com
     host_scheme:          http
 
     login_path:           /sso/login/
 
     # Configuration for OTP managers
     otp_manager:
-        name:       http
+        name: http
         managers:
             http:
-                provider:    service # Active provider for HTTP OTP manager
+                provider: guzzle     # Active provider for HTTP OTP manager
                 providers:           # Available HTTP providers
                     service:
-                        id: acme_bundle.your_own_fetch_service.id
+                        # the service must implement Krtv\SingleSignOn\Manager\Http\Provider\ProviderInterface
+                        id: krtv_single_sign_on_service_provider.security.authentication.otp_manager.http.provider.guzzle
 
                     guzzle:
-                        client:   acme_bundle.guzzle_service.id
+                        # in case you don't have a guzzle client, you must create one
+                        client:   acme_bundle.guzzle_service
+                        # the route that was created in the IdP bundle
                         resource: http://idp.example.com/internal/v1/sso
 
     otp_parameter:        _otp
     secret_parameter:     secret
 ```
-
-If you use `service` as a provider to fetch/invalidate OTP tokens, your service must implement the `Krtv\SingleSignOn\Manager\Http\Provider\ProviderInterface` interface.
 
 That's it for Service Provider.
