@@ -19,23 +19,74 @@ and redirects all configured SSO-routes to authenticate via a one-time-password.
 
 Installation
 ------------
-Install using composer:
+Installation is a quick 5 steps process:
 
-```
-php composer.phar require "korotovsky/sso-sp-bundle"
+1. Download SingleSignOnServiceProviderBundle using composer
+2. Enable the bundle
+3. Configure SingleSignOnServiceProviderBundle
+4. Enable the route to validate OTP
+5. Modify security settings
+
+### Step 1: Download SingleSignOnServiceProviderBundle using composer
+
+Tell composer to require the package:
+
+``` bash
+composer require korotovsky/sso-sp-bundle
 ```
 
-Enable the bundle in the kernel:
+Composer will install the bundle to your project's `vendor/korotovsky` directory.
+
+### Step 2: Enable the bundle
 
 ``` php
+<?php
 // app/AppKernel.php
-$bundles[] = new \Krtv\Bundle\SingleSignOnServiceProviderBundle\SingleSignOnServiceProviderBundle();
+
+public function registerBundles()
+{
+    $bundles = [
+        // ...
+        new Krtv\Bundle\SingleSignOnServiceProviderBundle\KrtvSingleSignOnServiceProviderBundle(),
+    ];
+}
+?>
 ```
 
-Configuration
--------------
+### Step 3: Configure SingleSignOnServiceProviderBundle
 
-Enable route to validate OTP:
+Add the following settings to your **config.yml**.
+
+``` yaml
+# app/config/config.yml
+krtv_single_sign_on_service_provider:
+    host:                 idp.example.com
+    host_scheme:          http
+
+    login_path:           /sso/login/
+
+    # Configuration for OTP managers
+    otp_manager:
+        name: http
+        managers:
+            http:
+                provider: guzzle     # Active provider for HTTP OTP manager
+                providers:           # Available HTTP providers
+                    service:
+                        # the service must implement Krtv\SingleSignOn\Manager\Http\Provider\ProviderInterface
+                        id: krtv_single_sign_on_service_provider.security.authentication.otp_manager.http.provider.guzzle
+
+                    guzzle:
+                        # in case you don't have a guzzle client, you must create one
+                        client:   acme_bundle.guzzle_service
+                        # the route that was created in the IdP bundle
+                        resource: http://idp.example.com/internal/v1/sso
+
+    otp_parameter:        _otp
+    secret_parameter:     secret
+```
+
+### Step 4: Enable route to validate OTP
 
 ``` yaml
 # app/config/routing.yml
@@ -44,10 +95,11 @@ otp:
     path: /otp/validate/
 ```
 
-Modify security settings:
+### Step 5: Modify security settings
 
 ``` yaml
 # app/config/security.yml
+security:
     firewalls:
         main:
             pattern: ^/
@@ -77,37 +129,6 @@ Modify security settings:
                 invalidate_session: true
                 path:               /logout
                 target:             http://idp.example.com/sso/logout?service=consumer1
-```
-
-Configure SingleSignOnServiceProvider bundle:
-
-``` yaml
-# app/config/config.yml
-krtv_single_sign_on_service_provider:
-    host:                 idp.example.com
-    host_scheme:          http
-
-    login_path:           /sso/login/
-
-    # Configuration for OTP managers
-    otp_manager:
-        name: http
-        managers:
-            http:
-                provider: guzzle     # Active provider for HTTP OTP manager
-                providers:           # Available HTTP providers
-                    service:
-                        # the service must implement Krtv\SingleSignOn\Manager\Http\Provider\ProviderInterface
-                        id: krtv_single_sign_on_service_provider.security.authentication.otp_manager.http.provider.guzzle
-
-                    guzzle:
-                        # in case you don't have a guzzle client, you must create one
-                        client:   acme_bundle.guzzle_service
-                        # the route that was created in the IdP bundle
-                        resource: http://idp.example.com/internal/v1/sso
-
-    otp_parameter:        _otp
-    secret_parameter:     secret
 ```
 
 Public API of this bundle
