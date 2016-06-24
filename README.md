@@ -110,4 +110,10 @@ krtv_single_sign_on_service_provider:
     secret_parameter:     secret
 ```
 
-That's it for Service Provider.
+Public API of this bundle
+-------------------------
+
+This bundle registers several services into service container. This services will help you customize SSO flow in the you application:
+
+- [sso_service_provider.otp_manager](https://github.com/korotovsky/SingleSignOnLibrary/blob/0.3.x/src/Krtv/SingleSignOn/Manager/OneTimePasswordManagerInterface.php) – Manager for working with OTP-tokens. Checking and receiving.
+- [sso_service_provider.uri_signer](https://github.com/symfony/symfony/blob/2.7/src/Symfony/Component/HttpKernel/UriSigner.php) -Service for signing URLs, if you need to redirect users to /sso/login yourself.
