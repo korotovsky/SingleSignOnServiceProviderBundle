@@ -19,35 +19,87 @@ and redirects all configured SSO-routes to authenticate via a one-time-password.
 
 Installation
 ------------
-Install using composer:
+Installation is a quick 5 steps process:
 
-```
-php composer.phar require "korotovsky/sso-sp-bundle"
+1. Download SingleSignOnServiceProviderBundle using composer
+2. Enable the bundle
+3. Configure SingleSignOnServiceProviderBundle
+4. Enable the route to validate OTP
+5. Modify security settings
+
+### Step 1: Download SingleSignOnServiceProviderBundle using composer
+
+Tell composer to require the package:
+
+``` bash
+composer require korotovsky/sso-sp-bundle
 ```
 
-Enable the bundle in the kernel:
+Composer will install the bundle to your project's `vendor/korotovsky` directory.
+
+### Step 2: Enable the bundle
 
 ``` php
+<?php
 // app/AppKernel.php
-$bundles[] = new \Krtv\Bundle\SingleSignOnServiceProviderBundle\SingleSignOnServiceProviderBundle();
+
+public function registerBundles()
+{
+    $bundles = [
+        // ...
+        new Krtv\Bundle\SingleSignOnServiceProviderBundle\KrtvSingleSignOnServiceProviderBundle(),
+    ];
+}
+?>
 ```
 
-Configuration
--------------
+### Step 3: Configure SingleSignOnServiceProviderBundle
 
-Enable route to validate OTP:
+Add the following settings to your **config.yml**.
+
+``` yaml
+# app/config/config.yml
+krtv_single_sign_on_service_provider:
+    host:                 idp.example.com
+    host_scheme:          http
+
+    login_path:           /sso/login/
+
+    # Configuration for OTP managers
+    otp_manager:
+        name: http
+        managers:
+            http:
+                provider: guzzle     # Active provider for HTTP OTP manager
+                providers:           # Available HTTP providers
+                    service:
+                        # the service must implement Krtv\SingleSignOn\Manager\Http\Provider\ProviderInterface
+                        id: krtv_single_sign_on_service_provider.security.authentication.otp_manager.http.provider.guzzle
+
+                    guzzle:
+                        # in case you don't have a guzzle client, you must create one
+                        client:   acme_bundle.guzzle_service
+                        # the route that was created in the IdP bundle
+                        resource: http://idp.example.com/internal/v1/sso
+
+    otp_parameter:        _otp
+    secret_parameter:     secret
+```
+
+### Step 4: Enable route to validate OTP
 
 ``` yaml
 # app/config/routing.yml
 otp:
     # this needs to be the same as the check_path, specified later on in security.yml
     path: /otp/validate/
-````
+```
 
-Modify security settings:
+### Step 5: Modify security settings
 
 ``` yaml
 # app/config/security.yml
+security:
     firewalls:
         main:
             pattern: ^/
@@ -79,34 +131,10 @@ Modify security settings:
                 target:             http://idp.example.com/sso/logout?service=consumer1
 ```
 
-Configure SingleSignOnServiceProvider bundle:
+Public API of this bundle
+-------------------------
 
-``` yaml
-# app/config/config.yml
-krtv_single_sign_on_service_provider:
-    host:                 idp.example.com
-    host_scheme:          http
+This bundle registers several services into service container. This services will help you customize SSO flow in the you application:
 
-    login_path:           /sso/login/
-
-    # Configuration for OTP managers
-    otp_manager:
-        name:       http
-        managers:
-            http:
-                provider:    service # Active provider for HTTP OTP manager
-                providers:           # Available HTTP providers
-                    service:
-                        id: acme_bundle.your_own_fetch_service.id
-
-                    guzzle:
-                        client:   acme_bundle.guzzle_service.id
-                        resource: http://idp.example.com/internal/v1/sso
-
-    otp_parameter:        _otp
-    secret_parameter:     secret
-```
-
-If you use `service` as a provider to fetch/invalidate OTP tokens, your service must implement the `Krtv\SingleSignOn\Manager\Http\Provider\ProviderInterface` interface.
-
-That's it for Service Provider.
+- [sso_service_provider.otp_manager](https://github.com/korotovsky/SingleSignOnLibrary/blob/0.3.x/src/Krtv/SingleSignOn/Manager/OneTimePasswordManagerInterface.php) – Manager for working with OTP-tokens. Checking and receiving.
+- [sso_service_provider.uri_signer](https://github.com/symfony/symfony/blob/3.1/src/Symfony/Component/HttpKernel/UriSigner.php) -Service for signing URLs, if you need to redirect users to /sso/login yourself.
