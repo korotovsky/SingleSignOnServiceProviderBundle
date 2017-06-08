@@ -25,9 +25,6 @@ class KrtvSingleSignOnServiceProviderExtensionTest extends \PHPUnit_Framework_Te
 
         $configs = array(
             array(
-                'host' => 'idp.example.com',
-                'host_scheme' => 'https',
-                'login_path' => '/sso/login/',
                 'otp_manager' => array(
                     'name' => 'http',
                     'managers' => array(
@@ -89,9 +86,6 @@ class KrtvSingleSignOnServiceProviderExtensionTest extends \PHPUnit_Framework_Te
         $this->assertCount(count($aliases), $containerMock->getAliases());
 
         $parameters = array(
-            'krtv_single_sign_on_service_provider.host' => 'idp.example.com',
-            'krtv_single_sign_on_service_provider.host_scheme' => 'https',
-            'krtv_single_sign_on_service_provider.login_path' => '/sso/login/',
             'krtv_single_sign_on_service_provider.otp_manager' => array(
                 'name' => 'http',
                 'managers' => array(
