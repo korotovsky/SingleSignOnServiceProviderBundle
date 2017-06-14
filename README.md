@@ -60,11 +60,6 @@ Add the following settings to your **config.yml**.
 ``` yaml
 # app/config/config.yml
 krtv_single_sign_on_service_provider:
-    host:                 idp.example.com
-    host_scheme:          http
-
-    login_path:           /sso/login/
-
     # Configuration for OTP managers
     otp_manager:
         name: http

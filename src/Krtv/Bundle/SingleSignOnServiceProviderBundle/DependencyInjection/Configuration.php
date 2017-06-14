@@ -22,24 +22,6 @@ class Configuration implements ConfigurationInterface
 
         $builder->root('krtv_single_sign_on_service_provider')
             ->children()
-                ->scalarNode('host')
-                    ->isRequired()
-                    ->validate()
-                        ->ifTrue(function($v) {
-                            return preg_match('/^http(s?):\/\//', $v);
-                        })
-                        ->thenInvalid('SSO host must only contain the host, and not the url scheme, eg: idp.domain.com')
-                    ->end()
-                ->end()
-
-                ->scalarNode('host_scheme')
-                    ->defaultValue('http')
-                ->end()
-
-                ->scalarNode('login_path')
-                    ->isRequired()
-                ->end()
-
                 ->arrayNode('otp_manager')
                     ->addDefaultsIfNotSet()
                     ->info('Configuration for OTP managers')

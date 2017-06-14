@@ -8,6 +8,10 @@ use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 
+if (!class_exists('\PHPUnit_Framework_TestCase') && class_exists('\PHPUnit\Framework\TestCase')) {
+    class_alias('\PHPUnit\Framework\TestCase', '\PHPUnit_Framework_TestCase');
+}
+
 /**
  * Class AuthenticationFailureHandlerTest
  * @package Krtv\Bundle\SingleSignOnServiceProviderBunde\Tests\Authentication\Handler
@@ -25,7 +29,7 @@ class AuthenticationFailureHandlerTest extends \PHPUnit_Framework_TestCase
             ->getMock();
 
         $failureHandler = new AuthenticationFailureHandler(
-            $this->getMock('Symfony\Component\HttpKernel\HttpKernelInterface'),
+            $this->getMockBuilder('Symfony\Component\HttpKernel\HttpKernelInterface')->getMock(),
             $this->getMockBuilder('Symfony\Component\Security\Http\HttpUtils')
                 ->enableProxyingToOriginalMethods()
                 ->getMock(),
@@ -35,7 +39,7 @@ class AuthenticationFailureHandlerTest extends \PHPUnit_Framework_TestCase
                 'failure_forward'        => false,
                 'failure_path_parameter' => '_failure_path'
             ),
-            $this->getMock('Psr\Log\LoggerInterface')
+            $this->getMockBuilder('Psr\Log\LoggerInterface')->getMock()
         );
         $failureHandler->setUriSigner($signerMock);
 

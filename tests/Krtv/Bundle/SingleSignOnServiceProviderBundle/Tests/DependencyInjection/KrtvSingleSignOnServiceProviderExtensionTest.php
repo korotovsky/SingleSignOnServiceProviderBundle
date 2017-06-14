@@ -3,7 +3,12 @@
 namespace Krtv\Bundle\SingleSignOnServiceProviderBunde\Tests\DependencyInjection;
 
 use Krtv\Bundle\SingleSignOnServiceProviderBundle\DependencyInjection\KrtvSingleSignOnServiceProviderExtension;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
+
+if (!class_exists('\PHPUnit_Framework_TestCase') && class_exists('\PHPUnit\Framework\TestCase')) {
+    class_alias('\PHPUnit\Framework\TestCase', '\PHPUnit_Framework_TestCase');
+}
 
 /**
  * Class KrtvSingleSignOnServiceProviderExtensionTest
@@ -16,18 +21,19 @@ class KrtvSingleSignOnServiceProviderExtensionTest extends \PHPUnit_Framework_Te
      */
     public function testLoad()
     {
-        $containerMock = $this->getMockBuilder('Symfony\Component\DependencyInjection\ContainerBuilder')
-            ->enableProxyingToOriginalMethods()
-            ->setConstructorArgs(array(
-                new ParameterBag()
-            ))
-            ->getMock();
+        $containerMock = new ContainerBuilder();
+
+        // remove default aliases of 'service_container' : Psr\Container\ContainerInterface  & Symfony\Component\DependencyInjection\ContainerInterface
+        foreach ($containerMock->getAliases() as $id => $alias) {
+            $containerMock->removeAlias($id);
+        }
+        // default definition like of 'service_container'
+        foreach ($containerMock->getDefinitions() as $id => $definition) {
+            $containerMock->removeDefinition($id);
+        }
 
         $configs = array(
             array(
-                'host' => 'idp.example.com',
-                'host_scheme' => 'https',
-                'login_path' => '/sso/login/',
                 'otp_manager' => array(
                     'name' => 'http',
                     'managers' => array(
@@ -89,9 +95,6 @@ class KrtvSingleSignOnServiceProviderExtensionTest extends \PHPUnit_Framework_Te
         $this->assertCount(count($aliases), $containerMock->getAliases());
 
         $parameters = array(
-            'krtv_single_sign_on_service_provider.host' => 'idp.example.com',
-            'krtv_single_sign_on_service_provider.host_scheme' => 'https',
-            'krtv_single_sign_on_service_provider.login_path' => '/sso/login/',
             'krtv_single_sign_on_service_provider.otp_manager' => array(
                 'name' => 'http',
                 'managers' => array(
