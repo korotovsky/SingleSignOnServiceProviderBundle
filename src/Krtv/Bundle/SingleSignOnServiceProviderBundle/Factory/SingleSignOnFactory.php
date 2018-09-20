@@ -133,7 +133,7 @@ class SingleSignOnFactory extends AbstractFactory
             $options['failure_path'] = $config['sso_failure_path'];
         }
 
-        $id = $this->getFailureHandlerId($id);
+        $id = 'security.authentication.failure_handler.'.$id.'.'.str_replace('-', '_', $this->getKey());;
 
         $failureHandler = $container->setDefinition($id, new DefinitionDecorator('krtv_single_sign_on_service_provider.authentication.handler.authentication_failure.abstract'));
         $failureHandler->replaceArgument(2, $options);
