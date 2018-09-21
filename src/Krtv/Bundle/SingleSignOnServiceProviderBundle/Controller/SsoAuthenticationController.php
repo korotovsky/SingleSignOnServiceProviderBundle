@@ -18,7 +18,16 @@ class SsoAuthenticationController extends Controller
         /*
          * Route called by ajax from other platforms to get user logged in on current platform
          */
-        if (!$this->get('security.authorization_checker')->isGranted('IS_AUTHENTICATED_FULLY')) {
+        try {
+            // from SF version >= 2.6
+            $authorization_checker= $this->get('security.authorization_checker');
+            
+        } catch (\Exception $ex) {
+            // before 2.6
+            $authorization_checker= $this->get('security.context');
+        }
+        
+        if (!$authorization_checker->isGranted('IS_AUTHENTICATED_FULLY')) {
             // if user is not authenticated AccessDeniedException will trigger authentication on IDP 
             throw $this->createAccessDeniedException();
         }
