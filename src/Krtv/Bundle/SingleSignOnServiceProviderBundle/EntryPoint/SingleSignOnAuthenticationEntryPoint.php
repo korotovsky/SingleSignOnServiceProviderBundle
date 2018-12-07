@@ -8,6 +8,7 @@ use Krtv\Bundle\SingleSignOnServiceProviderBundle\Security\Http\UriSigner;
 use Symfony\Component\Security\Http\EntryPoint\AuthenticationEntryPointInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Http\HttpUtils;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Class SingleSignOnAuthenticationEntryPoint
@@ -82,7 +83,7 @@ class SingleSignOnAuthenticationEntryPoint implements AuthenticationEntryPointIn
 
         $loginUrl = $this->uriSigner->sign($loginUrl);
 
-        return $this->httpUtils->createRedirectResponse($request, $loginUrl);
+        return new RedirectResponse($this->httpUtils->generateUri($request, $loginUrl), 302);
     }
 
     /**
