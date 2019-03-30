@@ -15,7 +15,7 @@ prefix:   /
 and in base twig:
 
 ``` bash
-{% if app.request.query.get('ajax') %}
+{% if app.request.query.get('authAll') %}
 	<script src="{{ idp_url }}/js/authenticate.js" type="text/javascript"></script>
 {% endif %}
 ``` 
