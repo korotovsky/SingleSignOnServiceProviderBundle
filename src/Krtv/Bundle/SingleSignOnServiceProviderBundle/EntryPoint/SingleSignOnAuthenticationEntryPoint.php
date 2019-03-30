@@ -10,6 +10,7 @@ use Symfony\Component\HttpKernel\UriSigner;
 use Symfony\Component\Security\Http\EntryPoint\AuthenticationEntryPointInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Http\HttpUtils;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Class SingleSignOnAuthenticationEntryPoint
@@ -84,8 +85,17 @@ class SingleSignOnAuthenticationEntryPoint implements AuthenticationEntryPointIn
         }
 
         // Sign Target URL to be able verify signature later
-        $targetUrl = $this->uriSigner->sign($targetUrl);
+        /*
+         * this signing apears to be unneeded, it only makes one more hash in url...
+         */
+//        $targetUrl = $this->uriSigner->sign($targetUrl);
 
+        // on successfull auth of SP1, auth on rest SPs
+        if (strpos($targetUrl, 'authAll=true') === false){
+            $str = ( strpos($targetUrl, '?') !== false ) ? '&authAll=true' : '?authAll=true';
+            $targetUrl = $targetUrl . $str;
+        }
+        
         // User will be redirected to this route if he isn't authenticated on identity provider
         // or if identity provider returned invalid response on OTP check.
         $failureUrl     = $context->getFailurePath($request);
@@ -129,6 +139,6 @@ class SingleSignOnAuthenticationEntryPoint implements AuthenticationEntryPointIn
         // Sign data
         $redirectUri = $this->uriSigner->sign($redirectUri);
 
-        return $this->httpUtils->createRedirectResponse($request, $redirectUri);
+        return new RedirectResponse($this->httpUtils->generateUri($request, $redirectUri), 302);
     }
 }

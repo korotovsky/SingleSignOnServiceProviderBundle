@@ -8,6 +8,7 @@ use Symfony\Component\HttpKernel\UriSigner;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Http\Authentication\DefaultAuthenticationFailureHandler;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Class AuthenticationFailureHandler
@@ -61,7 +62,7 @@ class AuthenticationFailureHandler extends DefaultAuthenticationFailureHandler
 
         $failureUrl = $this->uriSigner->sign($failureUrl);
 
-        return $this->httpUtils->createRedirectResponse($request, $failureUrl);
+        return new RedirectResponse($this->httpUtils->generateUri($request, $failureUrl), 302);
     }
 
     /**

@@ -1,0 +1,7 @@
+user_authenticate:
+    path: /sso/authenticate-user
+    defaults: { _controller: KrtvSingleSignOnServiceProviderBundle:SsoAuthentication:authenticateUser }
+
+user_logout:
+    path: /sso/logout-user/{service}
+    defaults: { _controller: KrtvSingleSignOnServiceProviderBundle:SsoAuthentication:logoutUser }

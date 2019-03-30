@@ -1,3 +1,62 @@
+Single Sign On Service Provider - Extension
+================================
+Below is forked readme from korotovsky, here will be explained what this extension provides:
+
+With original SSO implementation there was a problem when we are authenticated on IDP and SP1, but not on SP2. So when we visit SP2 public route SSO authentication is not triggered and user sees the public page of SP2 as not logged in user. So SsoAuthenticationController is added which is hit by /sso/authenticate-user path from SP1 ajax call and this ajax call generates session on SP2. Offcourse on IDP, SP1, SP2... some CORS settings on http server should be added. 
+
+So this to be working on SP in routing.yml file should be added:
+
+``` bash
+KrtvSingleSignOnServiceProviderBundle:
+resource: "@KrtvSingleSignOnServiceProviderBundle/Resources/config/routing.yml"
+prefix:   /    
+``` 
+
+and in base twig:
+
+``` bash
+{% if app.request.query.get('authAll') %}
+	<script src="{{ idp_url }}/js/authenticate.js" type="text/javascript"></script>
+{% endif %}
+``` 
+
+and parameters.yml should contain:
+``` bash
+idp_url: 'http://YOUR_IDP_GOES_HERE.com'
+``` 
+
+For **authenticate.js** file look at [IDP extension](https://github.com/mmilojevic/SingleSignOnIdentityProviderBundle)
+
+SingleSignOnAuthenticationEntryPoint.php had an extra hashing which is commented out.
+HttpUtils from symfony core from version 3.2 don't allow redirect to other domain (IDP). So calls like:
+``` bash
+return $this->httpUtils->createRedirectResponse($request, $redirectUri);
+``` 
+are changed with:
+
+``` bash
+return new RedirectResponse($this->httpUtils->generateUri($request, $redirectUri), 302);
+```
+
+Regarding this redirect problem logout target from security.yml is changed from:
+``` bash
+target:             http://idp.example.com/sso/logout?service=consumer1
+```
+to:
+``` bash
+target:             http://isp.example.com/sso/logout-user/consumer1
+```
+And offcourse appropriate route exists in SsoAuthenticationController.
+
+### Note
+
+PHP session names on IDP and all SPs should be different and set in config.yml with ie:
+``` bash
+framework
+	session:
+        name: SP1SESSID
+```
+
 Single Sign On Service Provider
 ================================
 
