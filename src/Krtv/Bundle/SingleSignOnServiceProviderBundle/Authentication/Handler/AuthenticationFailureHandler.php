@@ -4,10 +4,11 @@ namespace Krtv\Bundle\SingleSignOnServiceProviderBundle\Authentication\Handler;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
-use Symfony\Component\HttpKernel\UriSigner;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\SecurityContextInterface;
 use Symfony\Component\Security\Http\Authentication\DefaultAuthenticationFailureHandler;
+use Krtv\Bundle\SingleSignOnServiceProviderBundle\Security\Http\UriSigner;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Class AuthenticationFailureHandler
@@ -61,7 +62,7 @@ class AuthenticationFailureHandler extends DefaultAuthenticationFailureHandler
 
         $failureUrl = $this->uriSigner->sign($failureUrl);
 
-        return $this->httpUtils->createRedirectResponse($request, $failureUrl);
+        return new RedirectResponse($this->httpUtils->generateUri($request, $failureUrl), 302);
     }
 
     /**

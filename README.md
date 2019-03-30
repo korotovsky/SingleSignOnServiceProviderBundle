@@ -1,3 +1,42 @@
+Single Sign On Service Provider - Extension
+================================
+Below is forked readme from korotovsky, here will be explained what this extension provides:
+
+With original SSO implementation there was a problem when we are authenticated on IDP and SP1, but not on SP2. So when we visit SP2 public route SSO authentication is not triggered and user sees the public page of SP2 as not logged in user. So SsoAuthenticationController is added which is hit by /sso/authenticate-user path from SP1 ajax call and this ajax call generates session on SP2. Offcourse on IDP, SP1, SP2... some CORS settings on http server should be added. 
+
+So this to be working on SP in routing.yml file should be added:
+
+``` bash
+KrtvSingleSignOnServiceProviderBundle:
+resource: "@KrtvSingleSignOnServiceProviderBundle/Resources/config/routing.yml"
+prefix:   /    
+``` 
+
+and in base twig:
+
+``` bash
+{% if app.request.query.get('authAll') %}
+	<script src="{{ idp_url }}/js/authenticate.js" type="text/javascript"></script>
+{% endif %}
+``` 
+
+and parameters.yml should contain:
+``` bash
+idp_url: 'http://YOUR_IDP_GOES_HERE.com'
+``` 
+
+For **authenticate.js** file look at [IDP extension](https://github.com/mmilojevic/SingleSignOnIdentityProviderBundle)
+
+Custom UriSigner is introduced because version 2.2 of symfony uses UriSigner with sha1 algorithm but IDP (and generally symfony version > 2.2) uses sha256.
+
+### Note
+PHP session names on IDP and all SPs should be different and set in config.yml with ie:
+``` bash
+framework
+	session:
+        name: SP1SESSID
+```
+
 Single Sign On Service Provider
 ================================
 

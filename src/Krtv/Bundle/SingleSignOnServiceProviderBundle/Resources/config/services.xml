@@ -11,6 +11,7 @@
         <parameter key="krtv_single_sign_on_service_provider.authentication.provider.otp.class">Krtv\Bundle\SingleSignOnServiceProviderBundle\Authentication\Provider\OneTimePasswordAuthenticationProvider</parameter>
         <parameter key="krtv_single_sign_on_service_provider.authentication.handler.authentication_failure.class">Krtv\Bundle\SingleSignOnServiceProviderBundle\Authentication\Handler\AuthenticationFailureHandler</parameter>
         <parameter key="krtv_single_sign_on_service_provider.listener.otp.class">Krtv\Bundle\SingleSignOnServiceProviderBundle\Firewall\OneTimePasswordListener</parameter>
+        <parameter key="krtv_single_sign_on_service_provider.security.http.urisigner.class">Krtv\Bundle\SingleSignOnServiceProviderBundle\Security\Http\UriSigner</parameter>
     </parameters>
 
     <services>
@@ -49,10 +50,12 @@
         </service>
 
         <service id="krtv_single_sign_on_service_provider.authentication.handler.authentication_failure.abstract" class="%krtv_single_sign_on_service_provider.authentication.handler.authentication_failure.class%" parent="security.authentication.failure_handler" abstract="true" public="false">
-
+            <call method="setUriSigner">
+                <argument type="service" id="krtv_single_sign_on_service_provider.uri_signer"/>
+            </call>
         </service>
 
-        <service id="krtv_single_sign_on_service_provider.uri_signer" class="%uri_signer.class%">
+        <service id="krtv_single_sign_on_service_provider.uri_signer" class="%krtv_single_sign_on_service_provider.security.http.urisigner.class%">
             <argument /> <!-- secret -->
         </service>
     </services>

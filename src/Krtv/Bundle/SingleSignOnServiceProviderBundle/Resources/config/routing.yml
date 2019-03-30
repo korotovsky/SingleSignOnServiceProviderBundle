@@ -1,0 +1,4 @@
+user_authenticate:
+    path: /sso/authenticate-user
+    defaults: { _controller: KrtvSingleSignOnServiceProviderBundle:SsoAuthentication:authenticateUser }
+

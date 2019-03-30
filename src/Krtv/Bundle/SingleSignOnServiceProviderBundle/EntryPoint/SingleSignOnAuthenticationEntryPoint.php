@@ -4,10 +4,11 @@ namespace Krtv\Bundle\SingleSignOnServiceProviderBundle\EntryPoint;
 
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\UriSigner;
+use Krtv\Bundle\SingleSignOnServiceProviderBundle\Security\Http\UriSigner;
 use Symfony\Component\Security\Http\EntryPoint\AuthenticationEntryPointInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Http\HttpUtils;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Class SingleSignOnAuthenticationEntryPoint
@@ -31,7 +32,7 @@ class SingleSignOnAuthenticationEntryPoint implements AuthenticationEntryPointIn
     private $uriSigner;
 
     /**
-     * @param \Symfony\Component\HttpKernel\UriSigner $signer
+     * @param \Krtv\Bundle\SingleSignOnServiceProviderBundle\Security\Http\UriSigner $signer
      * @param \Symfony\Component\Security\Http\HttpUtils $httpUtils
      * @param array $options
      */
@@ -59,7 +60,14 @@ class SingleSignOnAuthenticationEntryPoint implements AuthenticationEntryPointIn
         $redirectUri = $this->getUriForPath($request, $checkPath);
 
         // make sure we keep the target path after login
-        if ($targetUrl = $this->determineTargetUrl($request)) {
+        $targetUrl = $this->determineTargetUrl($request);
+                
+        if (strpos($targetUrl, 'authAll=true') === false){
+            $str = ( strpos($targetUrl, '?') !== false ) ? '&authAll=true' : '?authAll=true';
+            $targetUrl = $targetUrl . $str;
+        }
+         
+        if ($targetUrl) {
             $redirectUri = sprintf('%s/?%s=%s', rtrim($redirectUri, '/'), $targetPathParameter, rawurlencode($targetUrl));
         }
 
@@ -75,7 +83,7 @@ class SingleSignOnAuthenticationEntryPoint implements AuthenticationEntryPointIn
 
         $loginUrl = $this->uriSigner->sign($loginUrl);
 
-        return $this->httpUtils->createRedirectResponse($request, $loginUrl);
+        return new RedirectResponse($this->httpUtils->generateUri($request, $loginUrl), 302);
     }
 
     /**
